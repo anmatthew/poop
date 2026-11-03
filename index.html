@@ -954,8 +954,8 @@
   window.shareResult = function() {
     const emojiMap = { correct: "🟩", present: "🟨", absent: "⬜" };
     const lines = [];
-    lines.push(`https://poop.matthewan.com 💩`);
-    lines.push(`Day #${dayNumber} ${startWord} → POOP ${won ? playerGuesses.length : 'X'}/8`);
+    lines.push(`Make it POOP`);
+    lines.push(`💩 Day #${dayNumber} ${startWord} → POOP ${won ? playerGuesses.length : 'X'}/8`);
     lines.push("");
     playerGuesses.forEach(g => {
       lines.push(g.states.map(s => emojiMap[s]).join(""));
