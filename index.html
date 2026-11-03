@@ -230,7 +230,6 @@
     box-sizing: border-box;
     resize: vertical;
   }
-  .share-actions { margin-top: 6px; display: flex; gap: 6px; justify-content: flex-end; }
   .overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.75);
     display: none; align-items: center; justify-content: center; z-index: 200;
@@ -286,10 +285,7 @@
 
   <div class="share-box" id="shareBox">
     <textarea id="shareText" readonly></textarea>
-    <div class="share-actions">
-      <button class="btn secondary" onclick="closeShareBox()" style="flex:1;">Close</button>
-      <button class="btn" onclick="copyShareText()" style="flex:1;">Copy</button>
-    </div>
+    <button class="btn" onclick="closeShareBox()" style="width:100%; margin-top:6px;">Close</button>
   </div>
 
   <div class="keyboard" id="keyboard"></div>
@@ -958,11 +954,8 @@
   window.shareResult = function() {
     const emojiMap = { correct: "🟩", present: "🟨", absent: "⬜" };
     const lines = [];
-    lines.push(`https://poop.matthewan.com`);
-    lines.push(`poop.matthewan.com 💩`);
-    lines.push(`Day #${dayNumber}`);
-    lines.push(`${startWord} → POOP`);
-    lines.push(won ? `${playerGuesses.length}/8` : `X/8`);
+    lines.push(`https://poop.matthewan.com 💩`);
+    lines.push(`Day #${dayNumber} ${startWord} → POOP ${won ? playerGuesses.length : 'X'}/8`);
     lines.push("");
     playerGuesses.forEach(g => {
       lines.push(g.states.map(s => emojiMap[s]).join(""));
@@ -977,33 +970,21 @@
     box.style.display = "block";
     ta.focus();
     ta.setSelectionRange(0, ta.value.length);
+
+    // Auto-copy when Share is tapped
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast();
+      }).catch(() => {
+        try { document.execCommand("copy"); showToast(); } catch (e) {}
+      });
+    } else {
+      try { document.execCommand("copy"); showToast(); } catch (e) {}
+    }
   };
 
   window.closeShareBox = function() {
     document.getElementById("shareBox").style.display = "none";
-  };
-
-  window.copyShareText = function() {
-    const ta = document.getElementById("shareText");
-    ta.focus();
-    ta.setSelectionRange(0, ta.value.length);
-    try {
-      document.execCommand("copy");
-      showToast();
-      closeShareBox();
-    } catch (e) {
-      // execCommand failed; try navigator.clipboard as fallback
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(ta.value).then(() => {
-          showToast();
-          closeShareBox();
-        }).catch(() => {
-          alert("Copy didn't work — please long-press the text and copy manually 💩");
-        });
-      } else {
-        alert("Copy didn't work — please long-press the text and copy manually 💩");
-      }
-    }
   };
 
   function showToast() {
