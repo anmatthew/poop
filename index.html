@@ -293,7 +293,7 @@
   const MAX_GUESSES = 4;
 
   const START_WORDS = [
-    "LOOP","COOP","HOOP","WOOP","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
+    "LOOP","COOP","WOOP","KILO","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
     "MOON","SOON","NOON","COOL","POOL","TOOL","BOOT","ROOT","SOOT","FOOT",
     "PORE","PURE","PORK","DOOR","BOOR","POOR","SORE","TORE","FOUR","TOUR",
     "BOON","COON","DOON","FOON","GOON","HOON","LOON","MOON","NOON","POON",
@@ -323,7 +323,7 @@
   ];
 
   const VALID = new Set([
-    "POOP","LOOP","COOP","HOOP","WOOP","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
+    "POOP","LOOP","COOP","KILO","WOOP","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
     "MOON","SOON","NOON","COOL","POOL","TOOL","BOOT","ROOT","SOOT","FOOT",
     "PORE","PURE","PORK","DOOR","BOOR","POOR","SORE","TORE","FOUR","TOUR",
     "OURS","PODS","POUR","STOP","TOPS","BOPS","POPS","OPUS","SPOT","POTS","POST","DOOM",
@@ -885,24 +885,6 @@
 
     const text = lines.join("\n");
 
-    // Native share sheet first (iPhone Messages, WhatsApp, etc.)
-    if (navigator.share) {
-      navigator.share({
-        title: `poop.matthewan.com 💩 Day #${dayNumber}`,
-        text: text,
-        url: "https://poop.matthewan.com"
-      }).then(() => {
-        showToast();
-      }).catch(() => {
-        // user cancelled or error — fall back to clipboard
-        copyText(text);
-      });
-    } else {
-      copyText(text);
-    }
-  }
-
-  function copyText(text) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(() => {
         showToast();
