@@ -914,11 +914,11 @@
     resultText.style.display = "block";
   }
 
-  function newGame() {
+  window.newGame = function() {
     init();
-  }
+  };
 
-  function shareResult() {
+  window.shareResult = function() {
     const emojiMap = { correct: "🟩", present: "🟨", absent: "⬜" };
     const lines = [];
     lines.push(`https://poop.matthewan.com`);
@@ -939,27 +939,35 @@
     ta.value = text;
     box.style.display = "block";
     ta.focus();
-    ta.select();
-  }
+    ta.setSelectionRange(0, ta.value.length);
+  };
 
-  function closeShareBox() {
+  window.closeShareBox = function() {
     document.getElementById("shareBox").style.display = "none";
-  }
+  };
 
-  function copyShareText() {
+  window.copyShareText = function() {
     const ta = document.getElementById("shareText");
-    ta.select();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(ta.value).then(() => {
-        showToast();
-        closeShareBox();
-      }).catch(() => {
-        try { document.execCommand("copy"); showToast(); closeShareBox(); } catch (e) {}
-      });
-    } else {
-      try { document.execCommand("copy"); showToast(); closeShareBox(); } catch (e) {}
+    ta.focus();
+    ta.setSelectionRange(0, ta.value.length);
+    try {
+      document.execCommand("copy");
+      showToast();
+      closeShareBox();
+    } catch (e) {
+      // execCommand failed; try navigator.clipboard as fallback
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(ta.value).then(() => {
+          showToast();
+          closeShareBox();
+        }).catch(() => {
+          alert("Copy didn't work — please long-press the text and copy manually 💩");
+        });
+      } else {
+        alert("Copy didn't work — please long-press the text and copy manually 💩");
+      }
     }
-  }
+  };
 
   function showToast() {
     toast.classList.add("show");
@@ -1006,5 +1014,3 @@
 
 </body>
 </html>
-
-
