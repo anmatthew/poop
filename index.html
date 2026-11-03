@@ -232,9 +232,8 @@
   }
   .share-actions { margin-top: 6px; display: flex; gap: 6px; justify-content: flex-end; }
   .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
     display: none; align-items: center; justify-content: center; z-index: 200;
-    backdrop-filter: blur(2px);
   }
   .modal {
     background: var(--card);
@@ -246,8 +245,8 @@
     overflow-y: auto;
     box-shadow: var(--shadow);
   }
-  .modal h2 { margin: 0 0 12px; font-size: 20px; }
-  .modal p { margin: 0 0 16px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .modal h2 { margin: 0 0 12px; font-size: 20px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .modal p { margin: 0 0 16px; font-size: 14px; color: var(--muted); line-height: 1.5; text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
   .modal .close { width: 100%; margin-top: 8px; }
   .stats-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
   .stats-table td { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
@@ -688,12 +687,32 @@
     dayNumber = Math.floor((today - epoch) / 86400000);
 
     document.getElementById("dayCounter").textContent = `Day #${dayNumber}`;
-    startWord = START_WORDS[dayNumber % START_WORDS.length];
 
-    playerGuesses = [];
-    currentGuess = "";
-    gameOver = false;
-    won = false;
+    // Try to restore an in-progress game for today
+    const saved = localStorage.getItem(`poople_game_${dayNumber}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        startWord = data.startWord;
+        playerGuesses = data.playerGuesses || [];
+        currentGuess = data.currentGuess || "";
+        gameOver = data.gameOver || false;
+        won = data.won || false;
+      } catch (e) {
+        startWord = START_WORDS[dayNumber % START_WORDS.length];
+        playerGuesses = [];
+        currentGuess = "";
+        gameOver = false;
+        won = false;
+      }
+    } else {
+      startWord = START_WORDS[dayNumber % START_WORDS.length];
+      playerGuesses = [];
+      currentGuess = "";
+      gameOver = false;
+      won = false;
+    }
+
     boardEl.innerHTML = "";
 
     // Row 0: start word (given, not a guess)
@@ -719,11 +738,26 @@
       }
     }
 
+    // Add extra rows if we already have more guesses than START_GUESSES
+    while (playerGuesses.length > START_GUESSES) {
+      ensureRow(playerGuesses.length);
+    }
+
     renderKeyboard();
-    shareBtn.style.display = "none";
-    newBtn.style.display = "none";
-    resultText.style.display = "none";
+    shareBtn.style.display = gameOver ? "inline-block" : "none";
+    newBtn.style.display = gameOver ? "inline-block" : "none";
+    resultText.style.display = gameOver ? "block" : "none";
     document.getElementById("shareBox").style.display = "none";
+  }
+
+  function saveGameState() {
+    localStorage.setItem(`poople_game_${dayNumber}`, JSON.stringify({
+      startWord,
+      playerGuesses,
+      currentGuess,
+      gameOver,
+      won
+    }));
   }
 
   function getTile(r, c) {
@@ -802,6 +836,7 @@
 
     const states = evaluate(word);
     playerGuesses.push({ letters: word.split(""), states });
+    saveGameState();
     const r = playerGuesses.length;
     revealRow(r, states, () => {
       const correct = states.every(s => s === "correct");
@@ -908,6 +943,7 @@
       resultMsg.innerHTML = `Couldn't reach POOP. Started with <b>${startWord}</b> 💩`;
     }
     localStorage.setItem("poople_stats", JSON.stringify(stats));
+    localStorage.removeItem(`poople_game_${dayNumber}`);
 
     shareBtn.style.display = "inline-block";
     newBtn.style.display = "inline-block";
@@ -915,6 +951,7 @@
   }
 
   window.newGame = function() {
+    localStorage.removeItem(`poople_game_${dayNumber}`);
     init();
   };
 
