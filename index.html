@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Make it POOP  </title>
+<title>Make it Poop — Turn it into POOP</title>
 <style>
   * { box-sizing: border-box; }
   :root {
@@ -49,6 +49,16 @@
     color: var(--poop);
   }
   .brand .emoji { font-size: 26px; line-height: 1; }
+  .day-counter {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
   .menu-btn {
     background: transparent;
     border: 1px solid var(--border);
@@ -233,7 +243,8 @@
 <body>
 
 <header>
-  <div class="brand"><span class="emoji">💩</span>POOPLE.IO</div>
+  <div class="brand"><span class="emoji">💩</span>Make it POOP </div>
+  <div class="day-counter" id="dayCounter">Poop #0</div>
   <button class="menu-btn" aria-label="Menu" onclick="openMenu()">⋮</button>
 </header>
 
@@ -256,7 +267,7 @@
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 <div class="modal" id="menu" style="display:none;">
-  <h2>Poople.io</h2>
+  <h2>poop.matthewan.com</h2>
   <p>Start with the word on top. Change <b>one letter at a time</b> to turn it into <b>POOP</b>.</p>
   <p>Each guess must be a valid 4-letter word that differs from the previous word by exactly one letter.</p>
   <div style="display:flex; gap:8px; margin:10px 0;">
@@ -295,6 +306,7 @@
   ]);
 
   let startWord = "";
+  let dayNumber = 0;
   let playerGuesses = [];
   let currentGuess = "";
   let gameOver = false;
@@ -317,7 +329,15 @@
   if (!stats.lastPlayed) stats.lastPlayed = null;
 
   function init() {
-    startWord = START_WORDS[Math.floor(Math.random() * START_WORDS.length)];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const epoch = new Date("2026-11-01T00:00:00Z");
+    epoch.setHours(0, 0, 0, 0);
+    dayNumber = Math.floor((today - epoch) / 86400000);
+
+    document.getElementById("dayCounter").textContent = `Day #${dayNumber}`;
+    startWord = START_WORDS[dayNumber % START_WORDS.length];
+
     playerGuesses = [];
     currentGuess = "";
     gameOver = false;
@@ -535,7 +555,9 @@
   function shareResult() {
     const emojiMap = { correct: "🟩", present: "🟨", absent: "⬜" };
     const lines = [];
-    lines.push(`Poople.io 💩`);
+    lines.push(`https://poop.matthewan.com`);
+    lines.push(`poop.matthewan.com 💩`);
+    lines.push(`Day #${dayNumber}`);
     lines.push(`${startWord} → POOP`);
     lines.push(won ? `${playerGuesses.length}/6` : `X/6`);
     lines.push("");
