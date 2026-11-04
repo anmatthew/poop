@@ -82,13 +82,24 @@
     flex-direction: column;
     align-items: center;
   }
+  .board-wrap {
+    width: 100%;
+    max-width: 280px;
+    margin-bottom: 14px;
+    overflow-y: auto;
+    max-height: 64vh;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #111;
+  }
+  .board-wrap::-webkit-scrollbar { width: 6px; }
+  .board-wrap::-webkit-scrollbar-track { background: #111; }
+  .board-wrap::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
   .board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
     width: 100%;
-    max-width: 280px;
   }
   .tile {
     width: 60px;
@@ -264,6 +275,7 @@
     .key { width: 36px; height: 48px; font-size: 14px; }
     .key.wide { width: 64px; }
     .key.wider { width: 82px; }
+    .board-wrap { max-width: 240px; }
     .board { max-width: 240px; }
     .keyboard { max-width: 240px; }
     .share-area { max-width: 240px; }
@@ -327,7 +339,9 @@
 </header>
 
 <main>
-  <div class="board" id="board"></div>
+  <div class="board-wrap" id="boardWrap">
+    <div class="board" id="board"></div>
+  </div>
 
   <div class="share-area">
     <button class="btn" id="shareBtn" onclick="shareResult()">Share</button>
@@ -384,7 +398,7 @@
   const WORD_LENGTH = 4;
   const TARGET = "POOP";
   const MAX_GUESSES = 8;
-  const START_GUESSES = 2;  // starter row + 2 empty rows = 3 rows total
+  const START_GUESSES = 2;
 
   const START_WORDS = [
     "LOOP","COOP","WOOP","KILO","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
@@ -725,6 +739,7 @@
   let won = false;
 
   const boardEl = document.getElementById("board");
+  const boardWrapEl = document.getElementById("boardWrap");
   const keyboardEl = document.getElementById("keyboard");
   const shareBtn = document.getElementById("shareBtn");
   const newBtn = document.getElementById("newBtn");
@@ -804,6 +819,7 @@
     }
 
     renderKeyboard();
+    scrollToActive();
     shareBtn.style.display = gameOver ? "inline-block" : "none";
     newBtn.style.display = gameOver ? "inline-block" : "none";
     resultText.style.display = gameOver ? "block" : "none";
@@ -833,6 +849,17 @@
       t.dataset.r = r;
       t.dataset.c = c;
       boardEl.appendChild(t);
+    }
+  }
+
+  function scrollToActive() {
+    if (!boardWrapEl) return;
+    const activeRow = playerGuesses.length + 1;
+    const tile = getTile(activeRow, 0);
+    if (tile) {
+      tile.scrollIntoView({ behavior: "smooth", block: "end" });
+    } else {
+      boardWrapEl.scrollTop = boardWrapEl.scrollHeight;
     }
   }
 
@@ -909,6 +936,7 @@
         currentGuess = "";
         ensureRow(playerGuesses.length + 1);
         renderBoard();
+        scrollToActive();
       }
     });
     renderKeyboard();
