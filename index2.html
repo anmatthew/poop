@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make it POOP</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #000000;
+    --card: #111111;
+    --text: #ffffff;
+    --muted: #888;
+    --border: #333333;
+    --poop: #8b5e3c;
+    --green: #6aaa64;
+    --yellow: #c9b458;
+    --gray: #787c7e;
+    --dark-gray: #3a3a3c;
+    --shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    max-width: 480px;
+    padding: 16px 12px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--poop);
+  }
+  .brand .emoji { font-size: 26px; line-height: 1; }
+  .day-counter {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .menu-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .menu-btn:hover { background: #f0efe8; color: #000; }
+  main {
+    width: 100%;
+    max-width: 480px;
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .tile {
+    width: 60px;
+    height: 60px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    font-size: 30px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    background: var(--card);
+    user-select: none;
+    transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .tile[data-state="start"] { background: #1a1a1a; border-color: #555; color: #888; }
+  .tile[data-state="filled"] { border-style: solid; border-color: var(--border); }
+  .tile[data-state="present"] { background: var(--yellow); border-color: var(--yellow); color: #fff; animation: flip 0.5s ease; }
+  .tile[data-state="correct"] { background: var(--green); border-color: var(--green); color: #fff; animation: flip 0.5s ease; }
+  .tile[data-state="absent"] { background: var(--gray); border-color: var(--gray); color: #fff; animation: flip 0.5s ease; }
+  @keyframes flip {
+    0% { transform: rotateX(0); }
+    45% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0); }
+  }
+  .tile.bounce { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+  }
+  .keyboard {
+    margin-top: auto;
+    width: 100%;
+    max-width: 280px;
+  }
+  .keyboard .row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .key {
+    width: 42px;
+    height: 54px;
+    margin: 0 3px;
+    border: none;
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .key.wide { width: 72px; }
+  .key.wider { width: 92px; }
+  .key:active { transform: translateY(1px); box-shadow: none; }
+  .key.correct { background: var(--green); color: #fff; border-color: var(--green); }
+  .key.present { background: var(--yellow); color: #fff; border-color: var(--yellow); }
+  .key.absent { background: var(--dark-gray); color: #fff; border-color: var(--dark-gray); }
+  .share-area {
+    width: 100%;
+    max-width: 280px;
+    margin: 14px 0 6px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .btn {
+    flex: 1;
+    height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: var(--poop);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    touch-action: manipulation;
+  }
+  .btn:hover { filter: brightness(0.95); }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .result-text {
+    margin-top: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 18px;
+    display: none;
+  }
+  .result-text .emoji { font-size: 22px; }
+  .copy-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 100;
+    white-space: nowrap;
+    border: 1px solid #444;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  }
+  .copy-toast.show { opacity: 1; }
+  .share-box {
+    width: 100%;
+    max-width: 280px;
+    margin: 10px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    display: none;
+  }
+  .share-box textarea {
+    width: 100%;
+    height: 120px;
+    font-family: monospace;
+    font-size: 14px;
+    background: #0a0a0a;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 8px;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+  }
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 340px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal h2 { margin: 0 0 12px; font-size: 20px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .modal p { margin: 0 0 16px; font-size: 14px; color: var(--muted); line-height: 1.5; text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
+  .modal .close { width: 100%; margin-top: 8px; }
+  .stats-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .stats-table td { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .stats-table .num { text-align: right; font-weight: 700; }
+  .hidden { display: none !important; }
+  @media (max-width: 360px) {
+    .tile { width: 52px; height: 52px; font-size: 26px; }
+    .key { width: 36px; height: 48px; font-size: 14px; }
+    .key.wide { width: 64px; }
+    .key.wider { width: 82px; }
+    .board { max-width: 240px; }
+    .keyboard { max-width: 240px; }
+    .share-area { max-width: 240px; }
+    .share-box { max-width: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="emoji">💩</span>Make it POOP</div>
+  <div class="day-counter" id="dayCounter">Day #0</div>
+  <button class="menu-btn" aria-label="Menu" onclick="openMenu()">⋮</button>
+</header>
+
+<main>
+  <div class="board" id="board"></div>
+
+  <div class="share-area">
+    <button class="btn" id="shareBtn" onclick="shareResult()">Share</button>
+    <button class="btn secondary" id="newBtn" onclick="newGame()">New Game</button>
+  </div>
+
+  <div class="result-text" id="resultText">
+    <span id="resultMsg"></span>
+  </div>
+
+  <div class="share-box" id="shareBox">
+    <textarea id="shareText" readonly></textarea>
+    <button class="btn" onclick="closeShareBox()" style="width:100%; margin-top:6px;">Close</button>
+  </div>
+
+  <div class="keyboard" id="keyboard"></div>
+</main>
+
+<div class="copy-toast" id="toast">Copied to clipboard 💩</div>
+
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+<div class="modal" id="menu" style="display:none;">
+  <h2>poop.matthewan.com</h2>
+  <p>Start with the word on top. Change <b>one letter at a time</b> to turn it into <b>POOP</b>.</p>
+  <p>Each guess must be a valid 4-letter word that differs from the previous word by exactly one letter.</p>
+  <div style="display:flex; gap:8px; margin:10px 0;">
+    <div class="tile" style="background:var(--green);color:#fff;border-color:var(--green)">💩</div>
+    <span style="flex:1;font-size:13px;color:var(--muted)">The poop is in the word and in the correct spot.</span>
+  </div>
+  <div style="display:flex; gap:8px; margin:0 0 16px 0;">
+    <div class="tile" style="background:var(--yellow);color:#fff;border-color:var(--yellow)">💩</div>
+    <span style="flex:1;font-size:13px;color:var(--muted)">The poop is in the word but in the wrong spot.</span>
+  </div>
+  <div style="display:flex; gap:8px; margin:0 0 16px 0;">
+    <div class="tile" style="background:var(--gray);color:#fff;border-color:var(--gray)">💩</div>
+    <span style="flex:1;font-size:13px;color:var(--muted)">The poop is not in the word.</span>
+  </div>
+  <table class="stats-table" id="statsTable"></table>
+  <button class="btn close" onclick="closeMenu()">Done</button>
+</div>
+
+<script>
+(() => {
+  const WORD_LENGTH = 4;
+  const TARGET = "POOP";
+  const MAX_GUESSES = 8;
+  const START_GUESSES = 4;
+
+  const START_WORDS = [
+    "LOOP","COOP","WOOP","KILO","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
+    "MOON","SOON","NOON","COOL","POOL","TOOL","BOOT","ROOT","SOOT","FOOT",
+    "PORE","PURE","PORK","DOOR","BOOR","POOR","SORE","TORE","FOUR","TOUR",
+    "BOON","COON","DOON","FOON","GOON","HOON","LOON","MOON","NOON","POON",
+    "ROON","SOON","TOON","WOON","YOON","ZOON","POLE","PORE","POVE","POPE",
+    "PODS","POPS","POOF","POON","POOP","POOR","PORE","POVE","POEM","POET",
+    "TOOL","FOOL","COOL","POOL","SOOL","WOOL","YOOL","ZOOL","TOON","COON",
+    "BOON","DOON","FOON","GOON","HOON","LOON","MOON","NOON","ROON","SOON",
+    "WOON","YOON","ZOON","TORE","CORE","DORE","FORE","GORE","HORE","LORE",
+    "MORE","NORE","PORE","RORE","SORE","TORE","WORE","YORE","ZORE","TOAD",
+    "COAD","DOAD","FOAD","GOAD","HOAD","LOAD","MOAD","NOAD","POAD","ROAD",
+    "SOAD","TOAD","WOAD","YOAD","ZOAD","TOOT","COOT","DOOT","FOOT","GOOT",
+    "HOOT","LOOT","MOOT","NOOT","POOT","ROOT","SOOT","TOOT","WOOT","YOOT",
+    "ZOOT","PORE","CORE","DORE","FORE","GORE","HORE","LORE","MORE","NORE",
+    "RORE","SORE","TORE","WORE","YORE","ZORE","POOL","COOL","DOOL","FOOL",
+    "GOOL","HOOL","LOOL","MOOL","NOOL","ROOL","SOOL","TOOL","WOOL","YOOL",
+    "ZOOL","POON","COON","DOON","FOON","GOON","HOON","LOON","MOON","NOON",
+    "ROON","SOON","TOON","WOON","YOON","ZOON","POOP","COOP","DOOP","FOOP",
+    "GOOP","HOOP","LOOP","MOOP","NOOP","ROOP","SOOP","TOOP","WOOP","YOOP",
+    "ZOOP","POLE","COLE","DOLE","FOLE","GOLE","HOLE","LOLE","MOLE","NOLE",
+    "POLE","ROLE","SOLE","TOLE","WOLE","YOLE","ZOLE","POEM","COEM","DOEM",
+    "FOEM","GOEM","HOEM","LOEM","MOEM","NOEM","ROEM","SOEM","TOEM","WOEM",
+    "YOEM","ZOEM","POET","COET","DOET","FOET","GOET","HOET","LOET","MOET",
+    "NOET","ROET","SOET","TOET","WOET","YOET","ZOET","POKE","COKE","DOKE",
+    "FOKE","GOKE","HOKE","LOKE","MOKE","NOKE","ROKE","SOKE","TOKE","WOKE",
+    "YOKE","ZOKE","PORE","CORE","DORE","FORE","GORE","HORE","LORE","MORE",
+    "NORE","RORE","SORE","TORE","WORE","YORE","ZORE"
+  ];
+
+  const VALID = new Set([
+    "POOP","LOOP","COOP","KILO","WOOP","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
+    "MOON","SOON","NOON","COOL","POOL","TOOL","BOOT","ROOT","SOOT","FOOT",
+    "PORE","PURE","PORK","DOOR","BOOR","POOR","SORE","TORE","FOUR","TOUR",
+    "OURS","PODS","POUR","STOP","TOPS","BOPS","POPS","OPUS","SPOT","POTS","POST","DOOM",
+    "ABAY","ABLE","ACID","ACRE","ACTS","AEON","AGED","AGLE","AGOD","AHAB",
+    "AHOY","AIDE","AIDS","AIMI","AIRS","AIRY","ALSO","AMEN","AMID","AMMO",
+    "ANIM","ANNO","ANTE","ANTI","APE","APES","APEX","ARMY","ARSE","ARTS",
+    "ARTY","ASIA","ASKS","ATOM","ATOM","AUNT","AVES","AVID","AVOW","AWAY",
+    "AWES","AWOE","AXIS","BABY","BACK","BACT","BADE","BAGS","BAIL","BAIT",
+    "BAKE","BALD","BALL","BAMS","BAND","BANE","BANG","BANK","BANS","BARK",
+    "BARN","BARS","BASE","BASH","BASK","BASS","BATH","BAYS","BEAD","BEAK",
+    "BEAM","BEAN","BEAR","BEAT","BEAU","BECK","BEEF","BEEN","BEER","BEES",
+    "BEET","BELA","BELL","BELT","BEND","BENT","BERG","BERR","BEST","BETA",
+    "BETS","BEVEL","BEY","BEZI","BIAS","BIBLE","BICE","BIDD","BIED","BIEN",
+    "BIES","BIFT","BIGE","BIGH","BIKE","BIOS","BIRD","BIRE","BIRT","BISH",
+    "BITT","BIZA","BLADE","BLAH","BLAI","BLAME","BLAN","BLAT","BLES","BLIP",
+    "BLOB","BLOT","BLOW","BLUE","BLUE","BLUR","BOAR","BOAT","BODS","BODY",
+    "BOGE","BOGY","BOIL","BOLD","BOLT","BOMB","BONA","BOND","BONE","BONG",
+    "BONK","BONY","BOOK","BOOL","BOOM","BOON","BOOS","BOOT","BORE","BORK",
+    "BORN","BORS","BOSS","BOTH","BOUD","BOUG","BOUT","BOVE","BOWS","BOXY",
+    "BOYS","BRAD","BRAG","BRAH","BRAI","BRAN","BRAS","BRAT","BRAW","BRAY",
+    "BRED","BREE","BREG","BRET","BREW","BRIA","BRID","BRIE","BRIG","BRIM",
+    "BRIN","BRIO","BRIS","BROD","BROK","BROM","BRON","BROO","BROS","BROW",
+    "BRUG","BRUS","BRUT","BUBS","BUCK","BUDD","BUFF","BUGG","BUHL","BUOY",
+    "BULB","BULK","BULL","BUMP","BUMS","BUNG","BUNK","BUNS","BUNT","BUOY",
+    "BURD","BURE","BURG","BURL","BURN","BURP","BURR","BURS","BURT","BURY",
+    "BUSB","BUSS","BUST","BUSY","BUYS","BUZZ","BYES","BYRE","BYTE","CABI",
+    "CADD","CADS","CAFE","CAGE","CAHO","CAIR","CAKE","CALF","CALL","CALM",
+    "CAMO","CAMP","CANA","CAND","CANE","CANY","CAPS","CARB","CARD","CARE",
+    "CARL","CARP","CARS","CART","CASE","CASH","CASK","CAST","CATE","CAVE",
+    "CAYS","CEDE","CEIL","CELL","CELT","CENT","CERT","CESS","CHAD","CHAI",
+    "CHAL","CHAM","CHAN","CHAP","CHAR","CHAT","CHAW","CHAY","CHEF","CHEN",
+    "CHEW","CHIC","CHIN","CHIP","CHIS","CHIT","CHOP","CHOW","CHUB","CHUG",
+    "CHUM","CHUN","CHUR","CHUS","CIAO","CISS","CIST","CITE","CITY","CLAD",
+    "CLAG","CLAM","CLAN","CLAP","CLAR","CLAS","CLAY","CLOD","CLOT","CLOY",
+    "CLUB","CLUE","CLUM","CLUN","COAD","COAL","COAT","COAX","COBB","COBS",
+    "CODE","COCK","COCO","CODE","COED","COIL","COIN","COKE","COIL","COIL",
+    "COLA","COLD","COLL","COLT","COLY","COMA","COMB","COME","COMO","CONF",
+    "CONS","COOK","COOL","COON","COOP","COOS","COOT","COPE","COPS","COPY",
+    "CORD","CORE","CORK","CORM","CORN","CORS","CORY","COSE","COST","COTE",
+    "COTS","COUL","COUP","COUR","COVE","COWL","COWN","COWS","COZE","CRAB",
+    "CRAG","CRAM","CRAN","CRAP","CRAW","CRED","CREE","CREM","CREW","CRIB",
+    "CRIM","CRIS","CROC","CROF","CROM","CROP","CROS","CROW","CRUE","CRUM",
+    "CRUS","CRUX","CUBE","CUBS","CUCK","CUFF","CUIT","CULT","CUPS","CURD",
+    "CURE","CURL","CURN","CURS","CURT","CUSS","CUTE","CUTS","CYST","DADA",
+    "DADO","DADS","DADO","DAFT","DALE","DAME","DAMP","DANE","DANG","DANK",
+    "DARE","DARK","DARN","DART","DASH","DATA","DATE","DAVE","DAWN","DAYS",
+    "DEAD","DEAF","DEAL","DEAN","DEAR","DEBT","DECK","DEED","DEEM","DEER",
+    "DEFT","DEFY","DELI","DELL","DEMO","DEOD","DEPT","DESS","DETE","DEWD",
+    "DIAL","DICE","DIED","DIET","DIGS","DIKE","DINE","DING","DINK","DINS",
+    "DINT","DIPS","DIRE","DIRK","DIRT","DISC","DISH","DISK","DISS","DITZ",
+    "DIVE","DOCK","DOES","DOLE","DOLL","DOME","DOOM","DOOR","DOOS","DOS",
+    "DOSE","DOSS","DOST","DOTS","DOUR","DOVE","DOWN","DOZE","DRAB","DRAG",
+    "DRAH","DRAM","DRAT","DRAW","DRED","DRIP","DRUB","DRUG","DRUM","DRYS",
+    "DUAD","DUAL","DUCK","DUCT","DUEL","DUET","DUKE","DULL","DUMB","DUMP",
+    "DUNS","DUPE","DURY","DUSK","DUST","DUTY","DWAR","DYED","DYER","DYES",
+    "DYKE","EACH","EARL","EARM","EARS","EASE","EAST","EASY","EATS","EAVY",
+    "EAUX","EBBS","ECOS","EDGY","EDIT","EDOM","EDOM","EDDY","EERY","EFFS",
+    "EGAD","EGER","EGGS","EGGO","EGOS","EIDE","ELAN","ELDE","ELKS","ELSE",
+    "EMEU","EMIT","EMMA","EMOS","EMYS","ENDS","ENYA","EONS","ERAS","ERST",
+    "ETUF","ETNA","ETUI","EURO","EVEN","EVER","EVIL","EXES","EXIT","EXPO",
+    "EXTS","EYED","EYEN","EYES","FACE","FACT","FADE","FAIL","FAIN","FAIR",
+    "FAKE","FALL","FAME","FANG","FARM","FARO","FARS","FART","FAST","FATE",
+    "FAYS","FEAR","FEAT","FEDS","FEEB","FEEL","FEET","FELL","FELT","FEND",
+    "FERN","FEST","FEUD","FEVER","FEWS","FEYD","FIAT","FIBE","FIFE","FIGH",
+    "FIGO","FILM","FILS","FIND","FINE","FINK","FINS","FIRE","FIRM","FISC",
+    "FISH","FIST","FITS","FIVE","FIXT","FIZZ","FJORD","FLAG","FLAK","FLAM",
+    "FLAP","FLAW","FLAY","FLEA","FLEE","FLEW","FLIE","FLIT","FLOG","FLOE",
+    "FLOG","FLOP","FLOW","FLUY","FLYB","FLYS","FODS","FOAM","FOBS","FOCI",
+    "FOES","FOGE","FOGY","FOIL","FOLD","FOLK","FOND","FONT","FOOD","FOOL",
+    "FOOT","FORA","FORB","FORD","FORE","FORK","FORM","FORT","FOSS","FOUL",
+    "FOUR","FOXY","FRAG","FRAH","FRAP","FRAT","FRAY","FRED","FREE","FRET",
+    "FRIB","FRIG","FRIZ","FROC","FROG","FROM","FRON","FROS","FRUG","FRUM",
+    "FUCK","FUEL","FUGE","FULL","FUME","FUND","FUNK","FUNL","FURL","FURY",
+    "FUSE","FUSS","FUST","FUTZ","FUZZ","GADO","GADS","GAFF","GAGE","GAIL",
+    "GAIN","GAIT","GALA","GALE","GALL","GALT","GAME","GANG","GANS","GAPE",
+    "GAPS","GARD","GARE","GARL","GARN","GARR","GARY","GASE","GASH","GATE",
+    "GAUD","GAUN","GAUS","GAVE","GAYS","GAZE","GEAR","GELD","GELT","GEMS",
+    "GEND","GENE","GENT","GENU","GEON","GERD","GERM","GERT","GETS","GHAT",
+    "GHET","GHIS","GHOS","GHYS","GIED","GIES","GIFT","GILD","GILL","GILT",
+    "GIMP","GINA","GINE","GINK","GINS","GIPS","GIRI","GISE","GIST","GIVE",
+    "GLADE","GLAD","GLAI","GLAM","GLAN","GLARE","GLASS","GLAU","GLEI","GLEN",
+    "GLEO","GLIA","GLIB","GLID","GLIM","GLOB","GLOG","GLOM","GLOP","GLOT",
+    "GLOW","GLUE","GLUM","GLUT","GLYPH","GNUS","GOAD","GOAL","GOAT","GOBS",
+    "GODS","GOER","GOES","GOLD","GOLF","GOLP","GOME","GONE","GOOF","GOON",
+    "GOOP","GOOS","GORA","GORD","GORE","GORP","GORY","GOSH","GOSP","GOTS",
+    "GOUG","GOUL","GOUT","GOVE","GOWN","GRAB","GRAD","GRAE","GRAF","GRAM",
+    "GRAN","GRAT","GRAY","GREA","GREE","GREG","GREN","GRES","GREW","GRID",
+    "GRIM","GRIN","GRIT","GROD","GROE","GROG","GROW","GRUB","GRUE","GRUM",
+    "GRUS","GRYS","GUBA","GUCK","GUES","GUESS","GUEST","GUID","GUIL","GULL",
+    "GULP","GULS","GUMS","GUNG","GUNK","GUNS","GUNY","GUPP","GURD","GURK",
+    "GURS","GUSH","GUST","GUTS","GUYE","GUYS","GYMS","GYPO","GYRE","GYRI",
+    "GYRO","HAAF","HAAS","HACK","HADE","HADS","HAED","HAEM","HAEN","HAET",
+    "HAFF","HAHN","HAIK","HAIL","HAIR","HALE","HALL","HALM","HALO","HALS",
+    "HALT","HAME","HAND","HANG","HANK","HANS","HARD","HARE","HARK","HARL",
+    "HARM","HARP","HARS","HART","HASD","HATE","HATH","HAUL","HAUS","HAVE",
+    "HAWK","HAYS","HAZE","HEAD","HEAL","HEAP","HEAR","HEAT","HEBE","HECK",
+    "HEED","HEEL","HEFT","HEID","HEIL","HEIR","HELD","HELL","HELM","HELP",
+    "HEMI","HEND","HENS","HEPC","HERD","HERE","HERI","HERL","HERM","HERN",
+    "HERO","HERS","HEWN","HEYS","HICC","HICK","HIDE","HIGH","HIKE","HILL",
+    "HILT","HIRE","HISS","HITS","HOAX","HOBN","HOCK","HOLD","HOLE","HOLM",
+    "HOLO","HOLY","HOME","HONE","HONK","HOOD","HOOF","HOOK","HOOT","HORA",
+    "HORE","HORN","HORO","HORS","HOST","HOTS","HOUL","HOUR","HOVE","HOWD",
+    "HOWE","HOWL","HOYS","HUBB","HUBS","HUCK","HUEY","HUES","HUFF","HUGE",
+    "HUGS","HUIC","HULK","HULL","HUMP","HUMS","HUND","HUNG","HUNK","HUNT",
+    "HURL","HURD","HURN","HURT","HUSH","HUSK","HUSS","HUST","HUTS","HYDE",
+    "HYED","HYEN","HYES","HYMN","HYPS","ICAL","ICED","ICHY","ICKE","ICY",
+    "IDEA","IDEE","IDLE","IDOL","IFFS","IKON","ILLS","IMBI","IMID","IMPS",
+    "IMPI","INAN","INCH","INCO","INCW","INDU","INFO","INKS","INKY","INNS",
+    "INRO","INS","INTI","INTO","INUL","IONS","IOTA","IRID","IRIS","IRKS",
+    "IRON","ISLE","ISMS","ITCH","ITEM","IVER","IVER","IVER","IVEY","IXIA",
+    "JACK","JADE","JAIL","JAKE","JAMS","JANE","JARE","JASS","JAWS","JAZZ",
+    "JEAN","JEED","JEER","JEEZ","JEFF","JELD","JEMM","JENN","JERK","JESS",
+    "JEST","JETS","JETT","JEWEL","JIBE","JIGS","JILL","JILT","JIMI","JIMM",
+    "JIMY","JING","JINK","JINX","JIRE","JISM","JIVE","JOBS","JOCK","JODE",
+    "JOES","JOEY","JOHN","JOIN","JOKE","JOLT","JOYS","JUDE","JUGS","JULE",
+    "JUMP","JUNG","JUNK","JUNO","JURY","JUST","JUTE","KAAL","KABO","KAFS",
+    "KAGU","KAIF","KAIN","KAKA","KALF","KALE","KALM","KAME","KANE","KANS",
+    "KANT","KAPA","KAPE","KAPP","KARM","KARS","KART","KARY","KASH","KATE",
+    "KAVA","KAVE","KAZE","KEEL","KEEN","KEEP","KEEN","KEFS","KEGS","KEIR",
+    "KELD","KEMP","KENN","KENS","KENT","KERN","KETO","KEYS","KHAD","KHAN",
+    "KICK","KIDS","KIEF","KILN","KILO","KILL","KILT","KIND","KING","KINK","KINS",
+    "KIOX","KIRK","KISS","KITE","KITH","KITS","KLUD","KLUG","KNEE","KNEW",
+    "KNIB","KNIT","KOAL","KOAN","KOCH","KOEL","KOFF","KOI","KOIS","KOMP",
+    "KOOS","KOPS","KORA","KORE","KORP","KORY","KOSO","KOSS","KOTS","KRAB",
+    "KRAG","KRAN","KRAP","KRAS","KRAT","KREP","KRET","KRIB","KRIS","KROK",
+    "KROM","KRON","KROP","KRUI","KRUT","KRUT","KRUZ","KRZZ","KUBE","KUCH",
+    "KUDO","KUED","KUES","KUFU","KUKS","KULE","KUMB","KUNG","KUNS","KURD",
+    "KURE","KURF","KURI","KURT","KUSS","KUTA","KUTS","KUVA","KUYS","KYDE",
+    "KYED","KYEN","KYES","KYND","KYNE","KYNS","KYRI","KYTE","LACE","LACK",
+    "LADE","LAID","LAIN","LAIR","LAKE","LALD","LALL","LALS","LAMA","LAMB",
+    "LAME","LAMP","LAND","LANE","LANG","LANK","LANS","LANT","LARD","LARE",
+    "LARK","LARN","LARS","LAST","LATE","LAUD","LAVA","LAVE","LAYS","LAZE",
+    "LEAD","LEAF","LEAK","LEAL","LEAM","LEAN","LEAR","LEAS","LEAT","LECH",
+    "LEED","LEEK","LEER","LEES","LEFT","LEGAL","LEGG","LEHR","LEIS","LEND",
+    "LENG","LENI","LENT","LEPER","LESH","LESS","LEST","LETE","LETS","LEUD",
+    "LEVE","LEVN","LEYS","LIAR","LIAS","LIED","LIEN","LIES","LIFF","LIFE",
+    "LIFT","LIKE","LILL","LILY","LIMA","LIMB","LIME","LIMN","LIMO","LIMP",
+    "LIMY","LIND","LINE","LING","LINK","LINS","LINT","LION","LIPE","LIPY",
+    "LISP","LIST","LITE","LITH","LITT","LIVE","LOAD","LOAF","LOAM","LOAN",
+    "LOBY","LOCH","LOCK","LOCS","LODE","LOFT","LOGG","LOGY","LOID","LOIN",
+    "LOLL","LOON","LOOP","LOOT","LORD","LORE","LORI","LOSE","LOSS","LOST",
+    "LOTS","LOUD","LOVE","LOWD","LOWL","LUBE","LUCK","LUDE","LUFF","LUGS",
+    "LUKE","LULL","LULU","LUME","LUMP","LUMS","LUNA","LUNG","LUNK","LURE",
+    "LURK","LUSH","LUST","LUTE","LYES","LYME","LYMP","LYRE","LYSE","MAAR",
+    "MAAS","MACE","MACH","MACK","MADE","MAGE","MAGI","MAGS","MAID","MAIL",
+    "MAIN","MAKE","MALE","MALK","MALL","MALT","MAMS","MANA","MAND","MANE",
+    "MANG","MANK","MANS","MANY","MAPS","MARC","MARD","MARE","MARK","MARS",
+    "MART","MARY","MASH","MAST","MATE","MATH","MATT","MAUL","MAUR","MAVS",
+    "MAZE","MEAD","MEAL","MEAN","MEAT","MECC","MECK","MEDS","MEED","MEET",
+    "MELT","MEME","MEND","MENU","MEOW","MERC","MERD","MERI","MERL","MESA",
+    "MESH","MESS","META","METE","METH","MEWL","MEWS","MICA","MICK","MICO",
+    "MIDS","MIEN","MIFF","MIGS","MILE","MILK","MILL","MIME","MIND","MINE",
+    "MINI","MINK","MINS","MINT","MIRE","MISS","MIST","MITE","MITT","MOAS",
+    "MOAT","MOBS","MOCH","MOOD","MOON","MOOR","MOOS","MOOT","MORA","MORE",
+    "MORN","MORS","MORSE","MORT","MOSS","MOST","MOTH","MOVE","MOWL","MUCH",
+    "MUCK","MUDD","MUFF","MUGS","MULE","MULL","MUMP","MUMS","MUNG","MUNK",
+    "MUON","MUSE","MUSH","MUSK","MUSS","MUST","MUTE","MUTS","MYNA","MYRR",
+    "NABA","NABE","NABO","NABS","NACK","NADA","NAGA","NAGE","NAHN","NAIL",
+    "NAIR","NAME","NANA","NAND","NANS","NANT","NAPE","NARS","NASH","NASS",
+    "NATH","NATU","NAVE","NAVY","NAYS","NEAP","NEAR","NEAT","NEBS","NECK",
+    "NEED","NEFS","NEGS","NEIV","NELL","NEON","NERD","NESS","NEST","NETS",
+    "NETT","NEWS","NEWT","NEWS","NEXT","NIBS","NICE","NICK","NIDE","NIEF",
+    "NIEN","NIES","NIGH","NIKS","NILL","NILO","NIPS","NISI","NITE","NITS",
+    "NIXE","NIXY","NOAH","NOBS","NODE","NOEL","NOES","NOIL","NOIR","NOLL",
+    "NOMB","NONE","NOOK","NOON","NOOP","NORI","NORM","NOSE","NOSY","NOTA",
+    "NOTE","NOUN","NOVA","NUDE","NUMS","NUNU","NUNS","NUPT","NURD","NURS",
+    "NUTS","NYAH","NYAS","NYED","NYEN","NYHS","NYSS","OAFS","OAKS","OAKY",
+    "OARS","OAST","OATH","OATS","OBED","OBES","OBOE","OBOL","OBOI","ODDS",
+    "ODEA","ODIS","ODOR","OFFA","OFTT","OGER","OGLE","OGRE","OHIO","OHIA",
+    "OHMS","OHOS","OINT","OKAY","OKEH","OKRA","OLDY","OLEO","OLEUM","OLIO",
+    "OLLA","OLOG","OMAN","OMEN","OMIT","OMOM","ONCE","ONCS","ONES","ONLY",
+    "ONTO","ONUS","OOHS","OOPS","OOZE","OPAL","OPEN","OPER","OPHS","OPIN",
+    "OPUS","ORAL","ORBI","ORCS","OREO","ORGA","ORGY","ORLE","ORON","OROT",
+    "ORTS","OSEL","OSIR","OSMA","OTIS","OTTO","OUGH","OULT","OUNG","OURS",
+    "OUST","OUTS","OVAL","OVEN","OVER","OVES","OWED","OWES","OWLS","OWNED",
+    "OWNS","OXER","OXES","OXON","OXYO","OYER","OYES","OYLA","OYST","PACE",
+    "PACK","PACS","PACT","PADI","PADS","PAGE","PAID","PAIL","PAIN","PAIR",
+    "PALE","PALL","PALM","PALS","PALY","PAPA","PAPS","PARA","PARD","PARE",
+    "PARK","PARL","PARR","PART","PARV","PASS","PAST","PATE","PATH","PATS",
+    "PATT","PAUL","PAVE","PAWS","PAYE","PAYS","PEAK","PEAL","PEAN","PEAR",
+    "PEAS","PEAT","PECK","PEEL","PEEN","PEEP","PEER","PEEV","PELE","PELT",
+    "PEND","PENS","PENT","PEON","PEPE","PERC","PERD","PERE","PERI","PERK",
+    "PERL","PERM","PERN","PERP","PESO","PEST","PETS","PEWE","PEYS","PFUI",
+    "PHAR","PHOS","PHYS","PIAD","PIAN","PICA","PICE","PICK","PICS","PIED",
+    "PIER","PIES","PIGS","PIKE","PILE","PILL","PILY","PIME","PIMP","PIND",
+    "PINE","PINK","PINS","PINT","PION","PIPS","PIRE","PISS","PITE","PITI",
+    "PITS","PIYU","PLACE","PLAG","PLAH","PLAI","PLAN","PLAP","PLAT","PLAY",
+    "PLEA","PLEB","PLED","PLEW","PLEX","PLIC","PLOD","PLOP","PLOT","PLU",
+    "PLUCK","PLUG","PLUM","PLUS","POCK","PODS","POEM","POET","POKE","POLE",
+    "POLK","POLL","POLO","POLY","POMP","POOL","POOP","POOR","POPE","POPS",
+    "PORA","PORE","PORK","PORM","PORN","PORR","PORS","PORT","POSE","POSH",
+    "POST","POSY","POTS","POUR","POWN","POWS","POYS","PRAG","PRAM","PRAT",
+    "PRAY","PREA","PRED","PREM","PREP","PREV","PREY","PRIG","PRIL","PRIM",
+    "PRIS","PROA","PROB","PROD","PROF","PROG","PROM","PROP","PROS","PROT",
+    "PRUD","PRUN","PRUP","PRYS","PSIA","PUBE","PUBS","PUCE","PUCK","PUFF",
+    "PUGS","PUKE","PULL","PULP","PUMP","PUNS","PUPS","PURE","PURI","PURL",
+    "PURP","PURR","PUSH","PUSS","PUTE","PUTS","PUTT","PYAL","PYRE","PYRO",
+    "PYXY","QUAD","QUAG","QUAI","QUAL","QUAI","QUAY","QUEY","QUIC","QUID",
+    "QUIP","QUIZ","QUOD","QUOP","QUOT","RABA","RACK","RACY","RADI","RADS",
+    "RAFT","RAGE","RAGI","RAGS","RAID","RAIL","RAIN","RAKE","RALP","RAMS",
+    "RAND","RANG","RANK","RANS","RANT","RAPE","RAPS","RARD","RARE","BARK",
+    "RARK","RATT","RAVE","RAWN","RAYS","RAZE","READ","REAL","REAM","REAR",
+    "REAV","RECK","RECT","REDE","REDS","REED","REEF","REEK","REEN","REEF",
+    "REES","REFD","REEL","REEN","REEN","REFF","REFY","REGY","REGO","REIF",
+    "REIN","RELY","REMA","REND","RENE","RENT","REPA","REPS","RERA","REST",
+    "RETE","RETS","REVE","REVY","REWI","REXX","RHEA","RHET","RHOD","RHUS",
+    "RIAL","RIBA","RIBS","RICE","RICH","RICK","RIDE","RIEL","RIFE","RIFT",
+    "RILL","RIMA","RIMS","RIND","RINE","RINK","RINS","RIOT","RIPE","RIPS",
+    "RISE","RISK","RISP","RITA","RITS","RIVE","RIVI","ROAD","ROAM","ROAR",
+    "ROBE","ROBS","ROCK","ROCK","RODS","ROED","ROIL","ROLE","ROLL","ROMA",
+    "ROME","ROMP","ROOD","ROOF","ROOK","ROOM","ROOT","ROPE","ROPE","ROSE",
+    "ROST","ROTE","ROTI","ROTS","ROUE","ROUS","ROUT","ROVE","ROWL","ROWN",
+    "ROWS","ROYD","RUBE","RUBY","RUCK","RUDD","RUEL","RUEY","RUFF","RUFU",
+    "RUGS","RUIN","RULE","RUMB","RUME","RUMP","RUMS","RUNE","RUNG","RUNS",
+    "RUNT","RUPE","RUSH","RUSK","RUSS","RUST","RUTH","RUTS","RYED","RYES",
+    "RYKE","RYND","RYOT","SABA","SACK","SADE","SADO","SAFE","SAGA","SAGE",
+    "SAGO","SAGS","SAID","SAIL","SALE","SALT","SAME","SAMP","SAND","SANE",
+    "SANG","SANK","SANS","SAPP","SARD","SARK","SARN","SARS","SASH","SASS",
+    "SATE","SAYS","SCAB","SCAD","SCAG","SCAM","SCAN","SCAP","SCAR","SCAT",
+    "SCAY","SCEN","SCEN","SCHE","SCHI","SCHM","SCHN","SCHO","SCOT","SEAF",
+    "SEAL","SEAM","SEAN","SEAR","SEAS","SEAT","SECK","SECT","SEED","SEEK",
+    "SEEL","SEEM","SEEN","SEES","SELF","SELL","SEME","SEMI","SEND","SENS",
+    "SENT","SEPT","SERD","SERS","SETH","SETS","SEWN","SEXT","SEYD","SHAD",
+    "SHAG","SHAH","SHAK","SHAM","SHAN","SHAP","SHAR","SHAT","SHAW","SHAY",
+    "SHED","SHIK","SHIM","SHIN","SHIP","SHIT","SHIV","SHOE","SHOL","SHOO",
+    "SHOT","SHOW","SHRI","SHUN","SHUT","SHYE","SICK","SIDE","SIFT","SIGH",
+    "SIGN","SIKE","SILD","SILL","SILO","SILT","SIRE","SIRI","SISS","SIST",
+    "SITE","SITH","SITS","SIXS","SIZE","SKAG","SKAG","SKAT","SKEG","SKID",
+    "SKIE","SKIG","SKIN","SKIP","SKIS","SKIT","SKYE","SLAB","SLAD","SLAG",
+    "SLAM","SLAP","SLAT","SLAW","SLAY","SLED","SLEW","SLID","SLIM","SLIP",
+    "SLIT","SLOB","SLOG","SLOP","SLOT","SLOW","SLUD","SLUE","SLUG","SLUM",
+    "SLUR","SMAG","SMAL","SMAT","SMEA","SMED","SMIT","SMOG","SMOL","SMUG",
+    "SMYS","SNAG","SNAP","SNIB","SNIG","SNIP","SNIT","SNUB","SNUG","SOAK",
+    "SOAP","SOAR","SOCK","SODA","SOFT","SOIL","SOLD","SOLE","SOME","SOME",
+    "SONG","SONS","SOON","SORE","SORT","SOSS","SOUL","SOUS","SOVE","SOWN",
+    "SOYS","SPACE","SPAD","SPAN","SPAR","SPAS","SPAT","SPAY","SPEA","SPEC",
+    "SPEE","SPED","SPEL","SPEN","SPES","SPET","SPIB","SPIG","SPIL","SPIN",
+    "SPIR","SPIT","SPLY","SPOD","SPOG","SPOO","SPOP","SPOT","SPRU","SPRY",
+    "SPUD","SPUE","SPUN","SPUR","SPUT","STAB","STAE","STAG","STAK","STAL",
+    "STAM","STAN","STAP","STAR","STAT","STAW","STAY","STEM","STEN","STEP",
+    "STER","STET","STEW","STIE","STIG","STIL","STIM","STIN","STIP","STIR",
+    "STOE","STOK","STOL","STOM","STON","STOP","STOT","STOW","STRA","STRE",
+    "STRI","STRO","STUB","STUD","STUE","STUM","STUN","STUR","SUDE","SUDS",
+    "SUET","SUIT","SUKS","SULK","SUMP","SUNS","SUNS","SUPE","SUPS","SURE",
+    "SURF","SWAB","SWAG","SWAM","SWAN","SWAP","SWAT","SWAY","SWED","SWEE",
+    "SWEL","SWET","SWIG","SWIM","SWIT","SWOB","SWOL","SWON","SWOP","SWOT",
+    "SYCE","SYED","SYEN","SYKE","SYND","SYRI","SYTE","TACK","TACO","TAED",
+    "TAEL","TAFF","TAFT","TAGG","TAIL","TAKE","TALC","TALE","TALK","TALL",
+    "TALM","TALS","TAMP","TANG","TANK","TANS","TANT","TAPE","TAPI","TARD",
+    "TARF","TARN","TARS","TART","TASK","TATE","TAUS","TAWD","TAWN","TAXI",
+    "TEAK","TEAL","TEAM","TEAR","TEAS","TEAT","TECH","TEED","TEEM","TEEN",
+    "TEET","TEHS","TELL","TEMP","TEND","TENE","TENT","TERF","TERM","TERN",
+    "TEST","TEWS","TEXT","THAN","THAN","THAT","THAW","THEE","THEM","THEN",
+    "THEW","THEY","THIA","THIR","THIS","THOL","THOR","THRO","THUD","THUG",
+    "THUM","TIAR","TICE","TICK","TICS","TIDE","TIED","TIER","TIES","TIFE",
+    "TIGS","TILD","TILE","TILL","TILS","TILT","TIME","TIND","TINE","TING",
+    "TINK","TINS","TINT","TIRE","TIRL","TIRO","TITE","TITH","TIVE","TOAD",
+    "TOBY","TOCK","TODS","TODY","TOED","TOGO","TOES","TOFF","TOFT","TOGS",
+    "TOIL","TOLL","TOME","TONE","TONG","TONS","TONY","TOOK","TOOL","TOOM",
+    "TOON","TOOT","TOPE","TOPS","TORE","TORI","TORN","TORO","TORS","TOSE",
+    "TOSS","TOST","TOTE","TOUR","TOUT","TOWA","TOWS","TOYE","TOYS","TRAB",
+    "TRAD","TRAG","TRAM","TRAN","TRAP","TRAY","TREE","TREK","TRES","TRIG",
+    "TRIM","TRIO","TRIP","TROD","TROG","TROP","TRUB","TRUE","TRUG","TRUM",
+    "TRYP","TUBE","TUBS","TUCK","TUES","TUFF","TUFT","TUGS","TUIS","TULE",
+    "TUMA","TUMP","TUMS","TUNE","TUNG","TUNS","TUQS","TURE","TURN","TURF",
+    "TURK","TURM","TURP","TURS","TUSH","TUSK","TUSS","TUTS","TUTU","TWAE",
+    "TWAT","TWEE","TWIG","TWIL","TWIN","TWIX","TYED","TYEE","TYER","TYES",
+    "TYKE","TYNE","TYPO","TYSE","UGLY","ULAN","ULEI","ULMA","ULUS","UMBR",
+    "UMPS","UNAI","UNAM","UNAN","UNBE","UNCO","UNED","UNEP","UNES","UNIT",
+    "UNNO","UNON","UNOS","UNTO","UNUP","UPDD","UPSY","URAE","URBS","URDS",
+    "UREA","URES","URIC","URNS","URUS","USED","USER","USES","UTAS","UTES",
+    "UTER","UTIL","UTUS","UVAE","UVAS","VAIL","VAIL","VALE","VAMP","VANS",
+    "VARD","VARE","VARK","VARM","VARY","VASE","VAST","VATE","VAYS","VETA",
+    "VETO","VETS","VICE","VIEU","VIEW","VILA","VILL","VILS","VISE","VIST",
+    "VITA","VITE","VIVO","VIVY","VIZE","VOCE","VOID","VOLA","VOLE","VOLT",
+    "VOTE","VOWS","VULG","VULT","WABS","WACK","WADI","WADS","WAES","WAFF",
+    "WAFT","WAGE","WAGS","WAIF","WAIL","WAIT","WAKE","WALE","WALD","WALK",
+    "WALL","WALT","WAND","WANE","WANG","WANK","WANT","WANY","WAPS","WARD",
+    "WARE","WARK","WARM","WARN","WART","WASH","WAST","WATE","WATH","WATS",
+    "WAVE","WAVS","WAVE","WAZE","WEAK","WEAL","WEAN","WEAR","WEBS","WEDS",
+    "WEED","WEEK","WEEL","WEEN","WEET","WEET","WEFT","WEIR","WEKS","WELD",
+    "WELL","WELT","WENE","WENT","WEPL","WERE","WERT","WEST","WETS","WHAM",
+    "WHAP","WHAT","WHEE","WHET","WHID","WHIG","WHIM","WHIN","WHIP","WHIT",
+    "WHIZ","WOAD","WOBS","WODS","WOES","WOGG","WOLD","WOLF","WOLV","WOMB",
+    "WONK","WONS","WOOZ","WOOS","WOOT","WORK","WOUL","WRAK","WRAN","WRAP",
+    "WRAT","WREN","WRIT","WRUN","WUDE","WULF","WUSS","WYAN","WYRE","WYSE",
+    "XERO","XING","XYST","YAGE","YAHN","YALE","YAMS","YANG","YANK","YARD",
+    "YARE","YARN","YAWL","YAWN","YAWP","YAWN","YEAR","YELD","YELP","YEON",
+    "YEOM","YEST","YETI","YIDS","YIELD","YIKE","YILL","YINS","YIPE","YIRS",
+    "YOCK","YOKE","YOLD","YOLK","YONS","YORE","YORK","YORP","YOTE","YOWL",
+    "YOWS","YUKS","YULE","YULE","YUNS","YURT","YUZU","ZACK","ZAID","ZALE",
+    "ZANI","ZANS","ZANY","ZAPS","ZAPP","ZARA","ZARD","ZEAL","ZEAL","ZEBU",
+    "ZEDS","ZEES","ZEIT","ZELI","ZENA","ZEND","ZENS","ZENT","ZEST","ZETA",
+    "ZEUS","ZIGS","ZILL","ZINC","ZINE","ZING","ZINS","ZIPS","ZITE","ZITH",
+    "ZITS","ZIZE","ZLOT","ZOA","ZODI","ZOE","ZONE","ZONI","ZONS","ZOON",
+    "ZOOS","ZORI","ZOYA","ZUIS","ZULU","ZUNS","ZUPS","ZWIS",
+    "TOOD","ROOD","LOOD","POOT","POOK","FOOR","TOOR","POOS","TOOS","BOOS","POOM","OPOS"
+  ]);
+
+  let startWord = "";
+  let dayNumber = 0;
+  let playerGuesses = [];
+  let currentGuess = "";
+  let gameOver = false;
+  let won = false;
+
+  const boardEl = document.getElementById("board");
+  const keyboardEl = document.getElementById("keyboard");
+  const shareBtn = document.getElementById("shareBtn");
+  const newBtn = document.getElementById("newBtn");
+  const resultText = document.getElementById("resultText");
+  const resultMsg = document.getElementById("resultMsg");
+  const toast = document.getElementById("toast");
+
+  let stats = JSON.parse(localStorage.getItem("poople_stats") || "{}");
+  if (!stats.played) stats.played = 0;
+  if (!stats.won) stats.won = 0;
+  if (!stats.currentStreak) stats.currentStreak = 0;
+  if (!stats.maxStreak) stats.maxStreak = 0;
+  if (!stats.guessDistribution) stats.guessDistribution = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
+  if (!stats.lastPlayed) stats.lastPlayed = null;
+
+  function init() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const epoch = new Date("2026-11-01T00:00:00Z");
+    epoch.setHours(0, 0, 0, 0);
+    dayNumber = Math.floor((today - epoch) / 86400000);
+
+    document.getElementById("dayCounter").textContent = `Day #${dayNumber}`;
+
+    // Try to restore an in-progress game for today
+    const saved = localStorage.getItem(`poople_game_${dayNumber}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        startWord = data.startWord;
+        playerGuesses = data.playerGuesses || [];
+        currentGuess = data.currentGuess || "";
+        gameOver = data.gameOver || false;
+        won = data.won || false;
+      } catch (e) {
+        startWord = START_WORDS[dayNumber % START_WORDS.length];
+        playerGuesses = [];
+        currentGuess = "";
+        gameOver = false;
+        won = false;
+      }
+    } else {
+      startWord = START_WORDS[dayNumber % START_WORDS.length];
+      playerGuesses = [];
+      currentGuess = "";
+      gameOver = false;
+      won = false;
+    }
+
+    boardEl.innerHTML = "";
+
+    // Row 0: start word (given, not a guess)
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const t = document.createElement("div");
+      t.className = "tile";
+      t.dataset.state = "start";
+      t.dataset.r = 0;
+      t.dataset.c = c;
+      t.textContent = startWord[c];
+      boardEl.appendChild(t);
+    }
+
+    // Rows 1..START_GUESSES: player guesses (start small, add more as needed)
+    for (let r = 1; r <= START_GUESSES; r++) {
+      for (let c = 0; c < WORD_LENGTH; c++) {
+        const t = document.createElement("div");
+        t.className = "tile";
+        t.dataset.state = "empty";
+        t.dataset.r = r;
+        t.dataset.c = c;
+        boardEl.appendChild(t);
+      }
+    }
+
+    // Add extra rows if we already have more guesses than START_GUESSES
+    while (playerGuesses.length > START_GUESSES) {
+      ensureRow(playerGuesses.length);
+    }
+
+    renderKeyboard();
+    shareBtn.style.display = gameOver ? "inline-block" : "none";
+    newBtn.style.display = gameOver ? "inline-block" : "none";
+    resultText.style.display = gameOver ? "block" : "none";
+    document.getElementById("shareBox").style.display = "none";
+  }
+
+  function saveGameState() {
+    localStorage.setItem(`poople_game_${dayNumber}`, JSON.stringify({
+      startWord,
+      playerGuesses,
+      currentGuess,
+      gameOver,
+      won
+    }));
+  }
+
+  function getTile(r, c) {
+    return boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+  }
+
+  function ensureRow(r) {
+    if (getTile(r, 0)) return;
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const t = document.createElement("div");
+      t.className = "tile";
+      t.dataset.state = "empty";
+      t.dataset.r = r;
+      t.dataset.c = c;
+      boardEl.appendChild(t);
+    }
+  }
+
+  function renderKeyboard() {
+    const rows = [
+      ["Q","W","E","R","T","Y","U","I","O","P"],
+      ["A","S","D","F","G","H","J","K","L"],
+      ["ENTER","Z","X","C","V","B","N","M","⌫"]
+    ];
+    keyboardEl.innerHTML = "";
+    const keyState = {};
+
+    playerGuesses.forEach(g => {
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        const letter = g.letters[i];
+        const state = g.states[i];
+        const prev = keyState[letter];
+        const rank = { absent:0, present:1, correct:2 };
+        if (!prev || rank[state] > rank[prev]) keyState[letter] = state;
+      }
+    });
+
+    rows.forEach(row => {
+      const rowEl = document.createElement("div");
+      rowEl.className = "row";
+      row.forEach(key => {
+        const btn = document.createElement("button");
+        btn.className = "key";
+        if (key === "ENTER") { btn.textContent = "ENTER"; btn.classList.add("wide"); }
+        else if (key === "⌫") { btn.textContent = "⌫"; btn.classList.add("wide"); }
+        else { btn.textContent = key; if (keyState[key]) btn.classList.add(keyState[key]); }
+        btn.addEventListener("click", () => handleKey(key));
+        rowEl.appendChild(btn);
+      });
+      keyboardEl.appendChild(rowEl);
+    });
+  }
+
+  function handleKey(key) {
+    if (gameOver) return;
+    if (key === "ENTER") submitGuess();
+    else if (key === "⌫") currentGuess = currentGuess.slice(0, -1);
+    else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) currentGuess += key;
+    renderBoard();
+  }
+
+  function submitGuess() {
+    if (currentGuess.length !== WORD_LENGTH) return shake();
+    const word = currentGuess;
+
+    if (!VALID.has(word)) {
+      shake();
+      return;
+    }
+
+    const prevWord = playerGuesses.length === 0 ? startWord : playerGuesses[playerGuesses.length - 1].letters.join("");
+    if (!differsByOne(prevWord, word)) {
+      shake();
+      return;
+    }
+
+    const states = evaluate(word);
+    playerGuesses.push({ letters: word.split(""), states });
+    saveGameState();
+    const r = playerGuesses.length;
+    revealRow(r, states, () => {
+      const correct = states.every(s => s === "correct");
+      if (correct) {
+        gameOver = true; won = true;
+        endGame();
+      } else if (playerGuesses.length === MAX_GUESSES) {
+        gameOver = true; endGame();
+      } else {
+        currentGuess = "";
+        ensureRow(playerGuesses.length + 1);
+        renderBoard();
+      }
+    });
+    renderKeyboard();
+  }
+
+  function differsByOne(a, b) {
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff++;
+    return diff === 1;
+  }
+
+  function evaluate(word) {
+    const targetArr = TARGET.split("");
+    const states = Array(WORD_LENGTH).fill("absent");
+    const used = Array(WORD_LENGTH).fill(false);
+
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (word[i] === targetArr[i]) {
+        states[i] = "correct";
+        used[i] = true;
+      }
+    }
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (states[i] !== "absent") continue;
+      for (let j = 0; j < WORD_LENGTH; j++) {
+        if (!used[j] && targetArr[j] === word[i]) {
+          states[i] = "present";
+          used[j] = true;
+          break;
+        }
+      }
+    }
+    return states;
+  }
+
+  function revealRow(r, states, onComplete) {
+    const letters = playerGuesses[r - 1].letters;
+    let i = 0;
+    function next() {
+      if (i >= WORD_LENGTH) { onComplete && onComplete(); return; }
+      const t = getTile(r, i);
+      t.textContent = letters[i];
+      t.dataset.state = "filled";
+      setTimeout(() => {
+        t.dataset.state = states[i];
+        i++;
+        next();
+      }, i === 0 ? 50 : 120);
+    }
+    next();
+  }
+
+  function renderBoard() {
+    playerGuesses.forEach((g, idx) => {
+      const r = idx + 1;
+      g.letters.forEach((ch, c) => {
+        const t = getTile(r, c);
+        t.textContent = ch;
+        t.dataset.state = (c < currentGuess.length && idx === playerGuesses.length - 1) ? "filled" : g.states[c];
+      });
+    });
+    const r = playerGuesses.length + 1;
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const t = getTile(r, c);
+      t.textContent = currentGuess[c] || "";
+      t.dataset.state = (c < currentGuess.length) ? "filled" : "empty";
+    }
+  }
+
+  function shake() {
+    const r = playerGuesses.length + 1;
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const t = getTile(r, c);
+      t.classList.add("bounce");
+      setTimeout(() => t.classList.remove("bounce"), 400);
+    }
+  }
+
+  function endGame() {
+    stats.played++;
+    const lastPlayed = new Date().toISOString().slice(0,10);
+    stats.lastPlayed = lastPlayed;
+
+    if (won) {
+      stats.won++;
+      stats.currentStreak++;
+      if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+      stats.guessDistribution[playerGuesses.length] = (stats.guessDistribution[playerGuesses.length]||0) + 1;
+      resultMsg.innerHTML = `You turned <b>${startWord}</b> into POOP in <span class="emoji">${playerGuesses.length}</span>/8 💩`;
+    } else {
+      stats.currentStreak = 0;
+      resultMsg.innerHTML = `Couldn't reach POOP. Started with <b>${startWord}</b> 💩`;
+    }
+    localStorage.setItem("poople_stats", JSON.stringify(stats));
+    localStorage.removeItem(`poople_game_${dayNumber}`);
+
+    shareBtn.style.display = "inline-block";
+    newBtn.style.display = "inline-block";
+    resultText.style.display = "block";
+  }
+
+  window.newGame = function() {
+    localStorage.removeItem(`poople_game_${dayNumber}`);
+    init();
+  };
+
+  window.shareResult = function() {
+    const emojiMap = { correct: "🟩", present: "🟨", absent: "⬜" };
+    const lines = [];
+    lines.push(`Make it POOP`);
+    lines.push(`💩 Day #${dayNumber} ${startWord} → POOP ${won ? playerGuesses.length : 'X'}/8`);
+    lines.push("");
+    playerGuesses.forEach(g => {
+      lines.push(g.states.map(s => emojiMap[s]).join(""));
+    });
+    if (!won) lines.push(`Start: ${startWord}`);
+
+    const text = lines.join("\n");
+
+    const box = document.getElementById("shareBox");
+    const ta = document.getElementById("shareText");
+    ta.value = text;
+    box.style.display = "block";
+    ta.focus();
+    ta.setSelectionRange(0, ta.value.length);
+
+    // Auto-copy when Share is tapped
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast();
+      }).catch(() => {
+        try { document.execCommand("copy"); showToast(); } catch (e) {}
+      });
+    } else {
+      try { document.execCommand("copy"); showToast(); } catch (e) {}
+    }
+  };
+
+  window.closeShareBox = function() {
+    document.getElementById("shareBox").style.display = "none";
+  };
+
+  function showToast() {
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2000);
+  }
+
+  window.openMenu = function() {
+    document.getElementById("overlay").style.display = "flex";
+    document.getElementById("menu").style.display = "block";
+    renderStatsTable();
+  };
+  window.closeMenu = function() {
+    document.getElementById("overlay").style.display = "none";
+    document.getElementById("menu").style.display = "none";
+  };
+
+  function renderStatsTable() {
+    const total = stats.played || 0;
+    const winPct = total ? Math.round((stats.won / total) * 100) : 0;
+    const t = document.getElementById("statsTable");
+    t.innerHTML = `
+      <tr><td>Played</td><td class="num">${total}</td></tr>
+      <tr><td>Win %</td><td class="num">${winPct}%</td></tr>
+      <tr><td>Current Streak</td><td class="num">${stats.currentStreak||0}</td></tr>
+      <tr><td>Max Streak</td><td class="num">${stats.maxStreak||0}</td></tr>
+      <tr><td style="border-bottom:none;"></td><td style="border-bottom:none;"></td></tr>
+      ${[1,2,3,4,5,6,7,8].map(n=>`
+        <tr><td>${n}</td><td class="num">${stats.guessDistribution[n]||0}</td></tr>
+      `).join("")}
+    `;
+  }
+
+  window.addEventListener("keydown", e => {
+    if (document.getElementById("menu").style.display === "block") return;
+    const key = e.key.toUpperCase();
+    if (e.key === "Enter") handleKey("ENTER");
+    else if (e.key === "Backspace") handleKey("⌫");
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(key);
+  });
+
+  init();
+})();
+</script>
+
+</body>
+</html>
