@@ -863,6 +863,11 @@
     }
   }
 
+  function scrollBoardToBottom() {
+    if (!boardWrapEl) return;
+    boardWrapEl.scrollTop = boardWrapEl.scrollHeight;
+  }
+
   function renderKeyboard() {
     const rows = [
       ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -1031,7 +1036,9 @@
       }, 700);
     } else {
       stats.currentStreak = 0;
-      resultMsg.innerHTML = `Couldn't reach POOP. Started with <b>${startWord}</b> 💩`;
+      resultMsg.innerHTML = `Couldn't Poop? Constipated are we? Started with <b>${startWord}</b> 💩`;
+      // push the board up so the result message is visible below it
+      scrollBoardToBottom();
     }
     localStorage.setItem("poople_stats", JSON.stringify(stats));
     localStorage.removeItem(`poople_game_${dayNumber}`);
