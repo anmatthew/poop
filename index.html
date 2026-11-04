@@ -76,7 +76,7 @@
   main {
     width: 100%;
     max-width: 480px;
-    padding: 12px 12px 240px; /* room for floating keyboard */
+    padding: 12px 12px 240px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -123,7 +123,6 @@
     30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
     40%, 60% { transform: translate3d(4px, 0, 0); }
   }
-  /* Floating keyboard */
   .keyboard {
     position: fixed;
     bottom: 0;
@@ -260,8 +259,17 @@
   .stats-table td { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
   .stats-table .num { text-align: right; font-weight: 700; }
   .hidden { display: none !important; }
+  @media (max-width: 360px) {
+    .tile { width: 52px; height: 52px; font-size: 26px; }
+    .key { width: 36px; height: 48px; font-size: 14px; }
+    .key.wide { width: 64px; }
+    .key.wider { width: 82px; }
+    .board { max-width: 240px; }
+    .keyboard { max-width: 240px; }
+    .share-area { max-width: 240px; }
+    .share-box { max-width: 240px; }
+  }
 
-  /* Snow & congrats */
   .snow-container {
     position: fixed;
     inset: 0;
@@ -307,16 +315,6 @@
   @keyframes congrats-pop {
     0% { transform: scale(0.7); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
-  }
-  @media (max-width: 360px) {
-    .tile { width: 52px; height: 52px; font-size: 26px; }
-    .key { width: 36px; height: 48px; font-size: 14px; }
-    .key.wide { width: 64px; }
-    .key.wider { width: 82px; }
-    .board { max-width: 240px; }
-    .keyboard { max-width: 240px; }
-    .share-area { max-width: 240px; }
-    .share-box { max-width: 240px; }
   }
 </style>
 </head>
@@ -386,7 +384,7 @@
   const WORD_LENGTH = 4;
   const TARGET = "POOP";
   const MAX_GUESSES = 8;
-  const START_GUESSES = 3;  // start small, grow as needed
+  const START_GUESSES = 2;  // starter row + 2 empty rows = 3 rows total
 
   const START_WORDS = [
     "LOOP","COOP","WOOP","KILO","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
@@ -788,7 +786,7 @@
       boardEl.appendChild(t);
     }
 
-    // Rows 1..START_GUESSES: start with only 3 player rows
+    // Rows 1..START_GUESSES: start with only 2 empty rows (3 total incl. starter)
     for (let r = 1; r <= START_GUESSES; r++) {
       for (let c = 0; c < WORD_LENGTH; c++) {
         const t = document.createElement("div");
@@ -1000,7 +998,6 @@
       if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
       stats.guessDistribution[playerGuesses.length] = (stats.guessDistribution[playerGuesses.length]||0) + 1;
       resultMsg.innerHTML = `You turned <b>${startWord}</b> into POOP in <span class="emoji">${playerGuesses.length}</span>/8 💩`;
-      // trigger snow splash after tile animation settles
       setTimeout(() => {
         showCongrats(`You turned ${startWord} into POOP in ${playerGuesses.length}/8! 💩`);
       }, 700);
@@ -1016,7 +1013,6 @@
     resultText.style.display = "block";
   }
 
-  /* ----- Snow & congrats ----- */
   function startSnow() {
     const container = document.getElementById("snowContainer");
     container.style.display = "block";
@@ -1101,13 +1097,18 @@
   }
 
   window.openMenu = function() {
-    document.getElementById("overlay").style.display = "flex";
-    document.getElementById("menu").style.display = "block";
+    const overlay = document.getElementById("overlay");
+    const menu = document.getElementById("menu");
+    overlay.style.display = "flex";
+    menu.style.display = "block";
     renderStatsTable();
   };
+
   window.closeMenu = function() {
-    document.getElementById("overlay").style.display = "none";
-    document.getElementById("menu").style.display = "none";
+    const overlay = document.getElementById("overlay");
+    const menu = document.getElementById("menu");
+    overlay.style.display = "none";
+    menu.style.display = "none";
   };
 
   function renderStatsTable() {
@@ -1127,7 +1128,11 @@
   }
 
   window.addEventListener("keydown", e => {
-    if (document.getElementById("menu").style.display === "block") return;
+    const menu = document.getElementById("menu");
+    if (menu.style.display === "block") {
+      if (e.key === "Escape") closeMenu();
+      return;
+    }
     const key = e.key.toUpperCase();
     if (e.key === "Enter") handleKey("ENTER");
     else if (e.key === "Backspace") handleKey("⌫");
