@@ -1035,7 +1035,7 @@
       resultMsg.innerHTML = `You turned <b>${startWord}</b> into POOP in <span class="emoji">${playerGuesses.length}</span>/8 💩`;
     } else {
       stats.currentStreak = 0;
-      resultMsg.innerHTML = `Couldn't Poop? Constipated are we? Started with <b>${startWord}</b> 💩`;
+      resultMsg.innerHTML = `Couldn't Poop? Constipated are we?<br>Started with <b>${startWord}</b> 💩`;
     }
     localStorage.setItem("poople_stats", JSON.stringify(stats));
     localStorage.removeItem(`poople_game_${dayNumber}`);
