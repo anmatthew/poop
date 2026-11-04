@@ -76,7 +76,7 @@
   main {
     width: 100%;
     max-width: 480px;
-    padding: 12px;
+    padding: 12px 12px 240px; /* room for floating keyboard */
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -123,10 +123,19 @@
     30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
     40%, 60% { transform: translate3d(4px, 0, 0); }
   }
+  /* Floating keyboard */
   .keyboard {
-    margin-top: auto;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
     max-width: 280px;
+    padding: 10px 0 24px;
+    background: rgba(17, 17, 17, 0.92);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--border);
+    z-index: 60;
   }
   .keyboard .row {
     display: flex;
@@ -251,6 +260,54 @@
   .stats-table td { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
   .stats-table .num { text-align: right; font-weight: 700; }
   .hidden { display: none !important; }
+
+  /* Snow & congrats */
+  .snow-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+  }
+  .snowflake {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.9;
+    animation: snowfall linear infinite;
+  }
+  @keyframes snowfall {
+    0% { transform: translateY(-10px) translateX(0); }
+    100% { transform: translateY(105vh) translateX(var(--tx)); }
+  }
+  .congrats-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    backdrop-filter: blur(4px);
+  }
+  .congrats-card {
+    background: var(--card);
+    border: 3px solid var(--poop);
+    border-radius: 20px;
+    padding: 26px 22px;
+    text-align: center;
+    max-width: 280px;
+    box-shadow: var(--shadow);
+    animation: congrats-pop 0.5s cubic-bezier(.175,.885,.32,1.275) both;
+  }
+  .congrats-emoji { font-size: 56px; display: block; margin: 0 0 10px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .congrats-card h2 { margin: 0 0 6px; font-size: 26px; color: var(--poop); }
+  .congrats-card p { margin: 0 0 20px; font-size: 16px; color: var(--text); }
+  @keyframes congrats-pop {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
   @media (max-width: 360px) {
     .tile { width: 52px; height: 52px; font-size: 26px; }
     .key { width: 36px; height: 48px; font-size: 14px; }
@@ -291,6 +348,16 @@
   <div class="keyboard" id="keyboard"></div>
 </main>
 
+<div class="snow-container" id="snowContainer"></div>
+<div class="congrats-overlay" id="congratsOverlay">
+  <div class="congrats-card">
+    <span class="congrats-emoji">💩</span>
+    <h2>CONGRATS!</h2>
+    <p id="congratsMsg">You made it POOP!</p>
+    <button class="btn" onclick="closeCongrats()">Awesome</button>
+  </div>
+</div>
+
 <div class="copy-toast" id="toast">Copied to clipboard 💩</div>
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
@@ -319,7 +386,7 @@
   const WORD_LENGTH = 4;
   const TARGET = "POOP";
   const MAX_GUESSES = 8;
-  const START_GUESSES = 4;
+  const START_GUESSES = 3;  // start small, grow as needed
 
   const START_WORDS = [
     "LOOP","COOP","WOOP","KILO","POOD","POON","TOAD","ROAD","LOAD","GOOD","FOOD",
@@ -684,7 +751,6 @@
 
     document.getElementById("dayCounter").textContent = `Day #${dayNumber}`;
 
-    // Try to restore an in-progress game for today
     const saved = localStorage.getItem(`poople_game_${dayNumber}`);
     if (saved) {
       try {
@@ -711,7 +777,7 @@
 
     boardEl.innerHTML = "";
 
-    // Row 0: start word (given, not a guess)
+    // Row 0: start word (given)
     for (let c = 0; c < WORD_LENGTH; c++) {
       const t = document.createElement("div");
       t.className = "tile";
@@ -722,7 +788,7 @@
       boardEl.appendChild(t);
     }
 
-    // Rows 1..START_GUESSES: player guesses (start small, add more as needed)
+    // Rows 1..START_GUESSES: start with only 3 player rows
     for (let r = 1; r <= START_GUESSES; r++) {
       for (let c = 0; c < WORD_LENGTH; c++) {
         const t = document.createElement("div");
@@ -734,7 +800,7 @@
       }
     }
 
-    // Add extra rows if we already have more guesses than START_GUESSES
+    // If a saved game already has more guesses than START_GUESSES, add rows
     while (playerGuesses.length > START_GUESSES) {
       ensureRow(playerGuesses.length);
     }
@@ -934,6 +1000,10 @@
       if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
       stats.guessDistribution[playerGuesses.length] = (stats.guessDistribution[playerGuesses.length]||0) + 1;
       resultMsg.innerHTML = `You turned <b>${startWord}</b> into POOP in <span class="emoji">${playerGuesses.length}</span>/8 💩`;
+      // trigger snow splash after tile animation settles
+      setTimeout(() => {
+        showCongrats(`You turned ${startWord} into POOP in ${playerGuesses.length}/8! 💩`);
+      }, 700);
     } else {
       stats.currentStreak = 0;
       resultMsg.innerHTML = `Couldn't reach POOP. Started with <b>${startWord}</b> 💩`;
@@ -945,6 +1015,45 @@
     newBtn.style.display = "inline-block";
     resultText.style.display = "block";
   }
+
+  /* ----- Snow & congrats ----- */
+  function startSnow() {
+    const container = document.getElementById("snowContainer");
+    container.style.display = "block";
+    container.innerHTML = "";
+    const count = 45;
+    for (let i = 0; i < count; i++) {
+      const flake = document.createElement("div");
+      flake.className = "snowflake";
+      const size = Math.random() * 6 + 4;
+      flake.style.width = size + "px";
+      flake.style.height = size + "px";
+      flake.style.left = Math.random() * 100 + "vw";
+      flake.style.animationDuration = (Math.random() * 3 + 2) + "s";
+      flake.style.animationDelay = Math.random() * 5 + "s";
+      flake.style.opacity = Math.random() * 0.5 + 0.2;
+      const tx = (Math.random() - 0.5) * 60;
+      flake.style.setProperty("--tx", tx + "vw");
+      container.appendChild(flake);
+    }
+  }
+
+  function stopSnow() {
+    const container = document.getElementById("snowContainer");
+    container.style.display = "none";
+    container.innerHTML = "";
+  }
+
+  window.showCongrats = function(msg) {
+    document.getElementById("congratsMsg").textContent = msg || "You made it POOP!";
+    document.getElementById("congratsOverlay").style.display = "flex";
+    startSnow();
+  };
+
+  window.closeCongrats = function() {
+    document.getElementById("congratsOverlay").style.display = "none";
+    setTimeout(stopSnow, 600);
+  };
 
   window.newGame = function() {
     localStorage.removeItem(`poople_game_${dayNumber}`);
@@ -971,7 +1080,6 @@
     ta.focus();
     ta.setSelectionRange(0, ta.value.length);
 
-    // Auto-copy when Share is tapped
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(() => {
         showToast();
