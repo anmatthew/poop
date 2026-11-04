@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%A9%3C/text%3E%3C/svg%3E">
 <title>Make it POOP</title>
 <style>
   * { box-sizing: border-box; }
@@ -29,6 +30,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    touch-action: manipulation;
   }
   header {
     width: 100%;
@@ -71,6 +73,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
   }
   .menu-btn:hover { background: #f0efe8; color: #000; }
   main {
@@ -90,6 +93,7 @@
     max-height: 64vh;
     scrollbar-width: thin;
     scrollbar-color: #444 #111;
+    touch-action: manipulation;
   }
   .board-wrap::-webkit-scrollbar { width: 6px; }
   .board-wrap::-webkit-scrollbar-track { background: #111; }
@@ -115,6 +119,7 @@
     color: #ccc;
     background: var(--card);
     user-select: none;
+    touch-action: manipulation;
     transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
   }
   .tile[data-state="start"] { background: #1a1a1a; border-color: #555; color: #888; }
@@ -205,6 +210,7 @@
     font-weight: 700;
     font-size: 18px;
     display: none;
+    touch-action: manipulation;
   }
   .result-text .emoji { font-size: 22px; }
   .copy-toast {
@@ -252,6 +258,7 @@
   .overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.75);
     display: none; align-items: center; justify-content: center; z-index: 200;
+    touch-action: manipulation;
   }
   .modal {
     background: var(--card);
@@ -863,11 +870,6 @@
     }
   }
 
-  function scrollBoardToBottom() {
-    if (!boardWrapEl) return;
-    boardWrapEl.scrollTop = boardWrapEl.scrollHeight;
-  }
-
   function renderKeyboard() {
     const rows = [
       ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -1031,14 +1033,9 @@
       if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
       stats.guessDistribution[playerGuesses.length] = (stats.guessDistribution[playerGuesses.length]||0) + 1;
       resultMsg.innerHTML = `You turned <b>${startWord}</b> into POOP in <span class="emoji">${playerGuesses.length}</span>/8 💩`;
-      setTimeout(() => {
-        showCongrats(`You turned ${startWord} into POOP in ${playerGuesses.length}/8! 💩`);
-      }, 700);
     } else {
       stats.currentStreak = 0;
       resultMsg.innerHTML = `Couldn't Poop? Constipated are we? Started with <b>${startWord}</b> 💩`;
-      // push the board up so the result message is visible below it
-      scrollBoardToBottom();
     }
     localStorage.setItem("poople_stats", JSON.stringify(stats));
     localStorage.removeItem(`poople_game_${dayNumber}`);
@@ -1046,6 +1043,18 @@
     shareBtn.style.display = "inline-block";
     newBtn.style.display = "inline-block";
     resultText.style.display = "block";
+
+    // Scroll all the way up so the result message is visible
+    setTimeout(() => {
+      if (boardWrapEl) boardWrapEl.scrollTop = 0;
+      resultText.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+
+    if (won) {
+      setTimeout(() => {
+        showCongrats(`You turned ${startWord} into POOP in ${playerGuesses.length}/8! 💩`);
+      }, 700);
+    }
   }
 
   function startSnow() {
